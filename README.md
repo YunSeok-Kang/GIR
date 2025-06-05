@@ -2,8 +2,8 @@
 
 # [T-PAMI🔥] Gir: 3d gaussian inverse rendering for relightable scene factorization  
 
-[![Paper](https://img.shields.io/badge/Paper-<Arxiv>-<COLOR>.svg)](https://arxiv.org/abs/2406.02058)
-[![Project Page](https://img.shields.io/badge/Project_Page-<Website>-blue.svg)](https://3d-aigc.github.io/OpenGaussian/)
+[![Paper](https://img.shields.io/badge/Paper-<Arxiv>-<COLOR>.svg)](https://arxiv.org/abs/2312.05133)
+[![Project Page](https://img.shields.io/badge/Project_Page-<Website>-blue.svg)](https://3dgir.github.io/)
     
 [Yahao Shi](https://scholar.google.com/citations?user=-VJZrUkAAAAJ&hl=en)<sup>1</sup>
 [Yanmin Wu](https://yanmin-wu.github.io/)<sup>2</sup>
