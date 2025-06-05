@@ -23,7 +23,7 @@
     
 ---
     
-Official implementation of "GIR: 3D Gaussian Inverse Rendering for Relightable Scene Factorization".
+[Prerelease] Official implementation of "GIR: 3D Gaussian Inverse Rendering for Relightable Scene Factorization".
     
 ## 🛠️ Pipeline
 <div align="center">
