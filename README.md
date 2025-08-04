@@ -110,6 +110,40 @@ python render.py -m $model_dir --skip_train --save_name ${hdr_list_name%.*} -w -
 
 ---
 
+### 2.1. 스크립트를 이용한 실험 자동화
+
+대규모 실험을 용이하게 하기 위해, 여러 장면에 걸쳐 다수의 HDR 환경을 자동으로 적용하고 훈련 및 재조명(relighting)을 수행하는 파이썬 스크립트(`run_exp_blender.py`)를 제공합니다. 이 스크립트는 프로젝트 최상위 디렉토리에 위치합니다.
+
+#### **사용법**
+
+`nerf_synthetic` 디렉토리 내의 모든 장면에 대해 `hdri` 디렉토리의 모든 HDR 이미지를 사용하여 실험을 실행하려면 다음 명령어를 사용하세요.
+
+```bash
+# 전체 실험 파이프라인 실행
+python run_exp_blender.py
+```
+
+실제 실험을 진행하기 전에 \*\*"dry run(가상 실행)"\*\*을 먼저 수행하는 것을 강력히 권장합니다. 이 옵션은 실제로 명령어를 실행하는 대신, 실행될 모든 명령어들을 터미널에 출력하여 설정 및 경로를 미리 검증할 수 있게 해줍니다.
+
+```bash
+# 경로 및 명령어 확인을 위한 가상 실행
+python run_exp_blender.py --dry-run
+```
+
+#### **결과물 구조**
+
+스크립트는 다음과 같이 `output_blender/` 디렉토리 내에 결과물을 체계적으로 정리하여 저장합니다.
+
+```
+output_blender/
+├── lego_model/                 # 'lego' 장면에 대해 훈련된 모델
+│   ├── checkpoints, etc.
+│   ├── lego_flower_road_no_sun_2k.mp4  # 재조명 결과 비디오
+│   └── lego_pillars_2k.mp4
+└── chair_model/                # 'chair' 장면에 대해 훈련된 모델
+    ├── ...
+```
+
 ## 3. Acknowledgements
 We are quite grateful for [3DGS](https://github.com/graphdeco-inria/gaussian-splatting), [NeRO](https://github.com/liuyuan-pal/NeRO), and [Filament](https://google.github.io/filament/Filament.html)
 
