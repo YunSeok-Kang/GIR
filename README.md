@@ -1,150 +1,67 @@
-<div align="center">
+# GIR 논문 실험 재현을 위한 자동화 스크립트
 
-# [T-PAMI🔥] Gir: 3d gaussian inverse rendering for relightable scene factorization  
+이 저장소는 원본 "GIR: 3D Gaussian Inverse Rendering for Relightable Scene Factorization" 프로젝트의 실험을 쉽게 재현하기 위한 자동화 스크립트를 제공합니다.
 
-[![Paper](https://img.shields.io/badge/Paper-<Arxiv>-<COLOR>.svg)](https://arxiv.org/abs/2312.05133)
-[![Project Page](https://img.shields.io/badge/Project_Page-<Website>-blue.svg)](https://3dgir.github.io/)
-    
-[Yahao Shi](https://scholar.google.com/citations?user=-VJZrUkAAAAJ&hl=en)<sup>1</sup>
-[Yanmin Wu](https://yanmin-wu.github.io/)<sup>2</sup>
-[Chenming Wu](https://chenming-wu.github.io/)<sup>3</sup>
-[Xing Liu](https://scholar.google.com/citations?user=bdVU63IAAAAJ&hl=en)<sup>3</sup>
-[Chen Zhao](https://scholar.google.com/citations?hl=en&user=kWzyOa8AAAAJ)<sup>3</sup>
-[Haocheng Feng](https://scholar.google.com.hk/citations?user=pnuQ5UsAAAAJ&hl=zh-CN&oi=ao)<sup>3</sup>
-[Jian Zhang](https://jianzhang.tech/)<sup>2</sup> 
-<br>
-[Bin Zhou](http://scholar.google.com/citations?user=tG4RnyYAAAAJ&hl=en&oi=ao)<sup>1</sup>
-[Errui Ding](https://scholar.google.com/citations?user=1wzEtxcAAAAJ&hl=zh-CN)<sup>3</sup>
-[Jingdong Wang](https://jingdongwang2017.github.io/)<sup>3</sup>
-    
-<sup>1</sup> Beihang University, <sup>2</sup> Peking University, <sup>3</sup> Baidu VIS
-    
-</div>
-    
----
-    
-[Prerelease] Official implementation of "GIR: 3D Gaussian Inverse Rendering for Relightable Scene Factorization".
-    
-## 🛠️ Pipeline
-<div align="center">
-  <img src="assets/pipeline.png"/>
-</div><br/>
-    
----
-    
-    
+**- 원본 프로젝트 저장소:** [https://github.com/guduxiaolang/GIR](https://www.google.com/search?q=https://github.com/guduxiaolang/GIR)
 
-## 0. Installation
+-----
 
-The installation of GIR is similar to [3D Gaussian Splatting](https://github.com/graphdeco-inria/gaussian-splatting).
+## 자동화 워크플로우
+
+이 저장소의 스크립트는 **설정 기반**으로 동작합니다. `run_experiment.py` 상단의 `EXPERIMENT_CONFIGS` 딕셔너리를 수정하여 새로운 종류의 실험을 쉽게 추가하고 관리할 수 있습니다.
+
+### **1. 사전 준비: 파일 구조**
+
+스크립트를 실행하기 전, 프로젝트의 파일 구조가 아래와 같이 구성되어 있는지 확인하세요.
+
+  * **`data/` 폴더**: 모든 장면 데이터셋을 이 폴더 안에 위치시킵니다.
+  * **최상위 폴더**: 환경맵(HDR) 폴더는 프로젝트 최상위에 그대로 둡니다.
+
+<!-- end list -->
+
 ```
-# Clone the Repository
-git clone https://github.com/guduxiaolang/GIR.git
-
-# Create the environment
-conda create -n gir python=3.7
-conda activate gir
- 
-# Install the dependencies
-pip install -r requirements.txt
-pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu116
-pip install -e submodules/diff-gaussian-rasterization
-pip install -e submodules/simple-knn
-pip install -e submodules/envlight
-pip install tqdm plyfile 
-    
-# Load HDR images correctly 
-pip install imageio[full]
-```
----
-    
-## 1. Data preparation
-The files are as follows:
-
-Blender Dataset
-```
-[DATA_ROOT]
-|---test
-|   |---<image 0>
-|   |---<image 1>
-|   |---...
-|---train
-|   |---<image 0>
-|   |---<image 1>
-|   |---...
-|---transforms_test.json
-|---transforms_train.json
-```  
-COLMAP Dataset 
-```
-[DATA_ROOT] 
-|---images
-|   |---<image 0>
-|   |---<image 1>
-|   |---...
-|---sparse
-    |---0
-        |---cameras.bin
-        |---images.bin
-        |---points3D.bin
+GIR/
+|-- data/
+|   |-- nerf_synthetic/
+|   |-- shiny_blender_dataset/
+|-- hdri/
+|-- high_res_envmaps_2k/
+|-- run_experiment.py   # 메인 실험 스크립트
+|-- create_videos.py    # 후처리 스크립트
+`-- ... (기타 원본 프로젝트 파일)
 ```
 
----
+### **2. 스크립트 실행 방법**
 
-## 2. Training and Evalution
-The training and evaluation commands for each dataset are provided in the shell scripts located in the `scripts` folder.
-    
-The basic training and testing commands are shown below.
-    
-```
-# training
-python train.py -s $data_dir --eval --port $port_num --random_background --hdr_rotation
-    
-# rendering
-python render.py -m $model_dir --skip_train --save_name "render" -w --hdr_rotation
-    
-# relighting
-python render.py -m $model_dir --skip_train --save_name ${hdr_list_name%.*} -w --hdr_rotation --environment_texture $hdr_dir --render_relight
-```
-    
+워크플로우는 단 두 단계로 간소화됩니다. 모든 스크립트는 실행할 **설정의 이름**을 첫 번째 인자로 받습니다.
 
----
+#### **1단계: 훈련 및 모든 이미지 렌더링 (`run_experiment.py`)**
 
-### 2.1. 스크립트를 이용한 실험 자동화
-
-대규모 실험을 용이하게 하기 위해, 여러 장면에 걸쳐 다수의 HDR 환경을 자동으로 적용하고 훈련 및 재조명(relighting)을 수행하는 파이썬 스크립트(`run_exp_blender.py`)를 제공합니다. 이 스크립트는 프로젝트 최상위 디렉토리에 위치합니다.
-
-#### **사용법**
-
-`nerf_synthetic` 디렉토리 내의 모든 장면에 대해 `hdri` 디렉토리의 모든 HDR 이미지를 사용하여 실험을 실행하려면 다음 명령어를 사용하세요.
+이 스크립트 하나로 **모델 훈련, 원본(GT) 이미지 렌더링, 재조명 이미지 렌더링**까지 모든 데이터 생성 과정을 한 번에 수행합니다.
 
 ```bash
-# 전체 실험 파이프라인 실행
-python run_exp_blender.py
+# 예시: Shiny Blender 데이터셋에 대한 모든 데이터 생성
+# (실행 전 --dry-run 옵션으로 확인 권장)
+python run_experiment.py shiny_blender
 ```
 
-실제 실험을 진행하기 전에 \*\*"dry run(가상 실행)"\*\*을 먼저 수행하는 것을 강력히 권장합니다. 이 옵션은 실제로 명령어를 실행하는 대신, 실행될 모든 명령어들을 터미널에 출력하여 설정 및 경로를 미리 검증할 수 있게 해줍니다.
+#### **2단계: 비디오 생성 및 통합 (`create_videos.py`)**
+
+`run_experiment.py` 실행 후, 아래 명령어로 모든 이미지 시퀀스를 찾아 최종 비디오로 변환하고 한 폴더에 모읍니다.
+
+**(주의: 이 스크립트를 실행하려면 시스템에 `ffmpeg`이 설치되어 있어야 합니다.)**
 
 ```bash
-# 경로 및 명령어 확인을 위한 가상 실행
-python run_exp_blender.py --dry-run
+# 예시: Shiny Blender 실험 결과물로 비디오 생성
+# (실행 전 --dry-run 옵션으로 확인 권장)
+python create_videos.py shiny_blender
 ```
 
-#### **결과물 구조**
+-----
 
-스크립트는 다음과 같이 `output_blender/` 디렉토리 내에 결과물을 체계적으로 정리하여 저장합니다.
+### **3. 최종 결과물**
 
-```
-output_blender/
-├── lego_model/                 # 'lego' 장면에 대해 훈련된 모델
-│   ├── checkpoints, etc.
-│   ├── lego_flower_road_no_sun_2k.mp4  # 재조명 결과 비디오
-│   └── lego_pillars_2k.mp4
-└── chair_model/                # 'chair' 장면에 대해 훈련된 모델
-    ├── ...
-```
+모든 과정이 끝나면, 각 실험 설정에 따라 생성된 최종 비디오들은 `output_videos_{설정이름}/` 폴더에 저장됩니다.
 
-## 3. Acknowledgements
-We are quite grateful for [3DGS](https://github.com/graphdeco-inria/gaussian-splatting), [NeRO](https://github.com/liuyuan-pal/NeRO), and [Filament](https://google.github.io/filament/Filament.html)
-
----
+  * **`output_videos_blender/`**: `blender_synthetic` 실험의 모든 결과 비디오.
+  * **`output_videos_shiny_blender/`**: `shiny_blender` 실험의 모든 결과 비디오.
